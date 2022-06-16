@@ -8,9 +8,9 @@ build:
 		--name seb_jetson_ZED \
 		seb_first_image \
 		bash -c "source /opt/ros/noetic/setup.bash; roscore"
-		@sleep 5
-		@docker exec -it seb_jetson_ZED bash -c "source /opt/ros/noetic/setup.bash; cd /root/ros_ws; catkin_make"
-		@$(MAKE) -s -f $(THIS_FILE) stop
+	@sleep 5
+	@docker exec -it seb_jetson_ZED bash -c "source /opt/ros/noetic/setup.bash; cd /root/ros_ws; catkin_make"
+	@$(MAKE) -s -f $(THIS_FILE) stop
 
 run:
 	@docker container stop seb_jetson_ZED || true && docker container rm seb_jetson_ZED || true
