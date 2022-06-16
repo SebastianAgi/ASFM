@@ -3,6 +3,6 @@ SHELL ["/bin/bash", "-c"]
 
 RUN apt-get update -y
 
-WORKDIR $CATKIN_WS
+WORKDIR $ros_ws
 
 CMD echo Hello everybody!
