@@ -1,5 +1,5 @@
 <launch>
   
-  <node pkg="(NOT_SURE)" name="talker" type="talker">
+  <node pkg="seb_jetson_Zed" name="test" type="posedetection.py">
 
 </launch>
