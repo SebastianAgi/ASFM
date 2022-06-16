@@ -3,6 +3,6 @@ SHELL ["/bin/bash", "-c"]
 
 RUN apt-get update -y
 
-WORKDIR /root/ros_ws/
+#WORKDIR /root/ros_ws/
 
 CMD echo Hello everybody!
