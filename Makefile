@@ -9,11 +9,14 @@ build:
 		--rm \
 		--detach \
 		-v ~/Documents/social_navigation:/root/ros_ws/src/social_navigation:rw \
+		-v ~/Documents/zed_ros_wrapper:/root/ros_ws/src/zed-ros-wrapper:rw \
 		--name seb_jetson_ZED \
 		seb_first_image \
 		bash -c "source /opt/ros/noetic/setup.bash; roscore"
 	@sleep 5s
-	@docker exec -it seb_jetson_ZED bash -c "source /opt/ros/noetic/setup.bash; cd /root/ros_ws; catkin build"
+	@docker exec -it seb_jetson_ZED bash -c "source /opt/ros/noetic/setup.bash; \
+	rosdep install --from-paths src --ignore-src --rosdistro noetic -y; \
+	cd /root/ros_ws; catkin build"
 	@$(MAKE) -s -f $(THIS_FILE) stop
 
 run:
@@ -28,6 +31,7 @@ run:
 		-v ~/.Xauthority:/root/.Xauthority:rw \
 		-v "/tmp/.X11-unix:/tmp/.X11-unix:rw" \
 		-v ~/Documents/social_navigation:/root/ros_ws/src/social_navigation:rw \
+		-v ~/Documents/zed_ros_wrapper:/root/ros_ws/src/zed-ros-wrapper:rw \
 		--network host \
 		--privileged \
 		--runtime=nvidia \
