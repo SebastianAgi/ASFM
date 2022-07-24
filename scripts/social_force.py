@@ -107,7 +107,7 @@ def move(delta_time,socialforce, desiredforce, current_velo):
 
 
 def callback(spot, obj_det):
-    global past_time, current_time, velo
+    global past_time, current_time, velo, flag
     
     if flag == False:
     past_time = rospy.Time.now()
