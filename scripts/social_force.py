@@ -139,7 +139,7 @@ def callback(spot, obj_det):
 
     current_time = rospy.Time.now()
 
-    delta_time = float(rospy.Time.__str__(rospy.Time.__sub__(current_time,past_time)))
+    delta_time = float(rospy.Time.__str__(rospy.Time.__sub__(current_time,past_time)))/10**9
     
     new_spot_velo = move(delta_time,s_force, g_force, spot_velo)
     velo.linear.x = new_spot_velo[0,0]
