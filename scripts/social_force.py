@@ -10,8 +10,6 @@ import numpy as np
 from numpy import *
 import spot_driver.msg
 
-roll = pitch = yaw = 0.0
-
 pub = rospy.Publisher('/obj_too_close', geometry_msgs.msg.Twist, queue_size=10)
 warn_info = zed_interfaces.msg.FloatList()
 velo = geometry_msgs.msg.Twist()
@@ -111,8 +109,10 @@ def move(delta_time,socialforce, desiredforce, current_velo):
 def callback(spot, obj_det):
     global past_time, current_time, velo
     
-    # rospy.loginfo(spot)
-    # rospy.loginfo(obj_det)
+    if flag == False:
+    past_time = rospy.Time.now()
+    flag = True
+    
     RelaxationTime = 1
     v_max = 1.6
     goal_x = -4.922226052558839
@@ -139,10 +139,7 @@ def callback(spot, obj_det):
 
     current_time = rospy.Time.now()
 
-    if past_time == 0:
-        rospy.Time.set(current_time, 0, 500000)
-
-    delta_time = current_time - past_time
+    delta_time = float(rospy.Time.__str__(rospy.Time.__sub__(current_time,past_time)))
     
     new_spot_velo = move(delta_time,s_force, g_force, spot_velo)
     velo.linear.x = new_spot_velo[0,0]
