@@ -5,6 +5,9 @@ import std_msgs.msg
 import rospy
 import time
 import math
+import os
+import readchar
+import sys
 import message_filters
 import numpy as np
 from numpy import *
@@ -17,29 +20,29 @@ resume_checkpoint = 0
 past_time = 0
 current_time = 0
 current_checkpoint = 0
+file_list = []
 
-path = '/ros_ws/src' #Directory to save Pose file
+path = '/home/prl-orin/ros_ws/src' #Directory to load Pose file from
 load_file_name = "Pose_load.txt"
 completeName_load = os.path.join(path, load_file_name)
-
-self.pose_file = open(completeName_load, "r")
-for line in self.pose_file:
-        self.stripped_line = line.strip()
-        self.line_list = self.stripped_line.split()
-        self.file_list.append(self.line_list)
+pose_file = open(completeName_load, "r")
+for line in pose_file:
+        stripped_line = line.strip()
+        line_list = stripped_line.split()
+        file_list.append(line_list)
 
 #Pre-load pose coordinates
-self.Poses = []
+Poses = []
 for i in range(9):
-    self.pose = geometry_msgs.msg.Pose()
-    self.pose.position.x = float(self.file_list[3+i*12][1])
-    self.pose.position.y = float(self.file_list[4+i*12][1])
-    self.pose.position.z = float(self.file_list[5+i*12][1])
-    self.pose.orientation.x = float(self.file_list[7+i*12][1])
-    self.pose.orientation.y = float(self.file_list[8+i*12][1])
-    self.pose.orientation.z = float(self.file_list[9+i*12][1])
-    self.pose.orientation.w = float(self.file_list[10+i*12][1])
-    self.Poses.append(self.pose)
+    pose = geometry_msgs.msg.Pose()
+    pose.position.x = float(file_list[3+i*12][1])
+    pose.position.y = float(file_list[4+i*12][1])
+    pose.position.z = float(file_list[5+i*12][1])
+    pose.orientation.x = float(file_list[7+i*12][1])
+    pose.orientation.y = float(file_list[8+i*12][1])
+    pose.orientation.z = float(file_list[9+i*12][1])
+    pose.orientation.w = float(file_list[10+i*12][1])
+    Poses.append(pose)
 
 def check_next_pose(x, y):
     current_checkpoint = 0 
@@ -61,9 +64,9 @@ def desired_force(desired_direction, vmax, current_velo, RelaxationTime):
 def social_force(spot, ped):
     force = 0
     lambda_ = 1.0
-    A = 5.5
-    B = -2
-    C = 1.7
+    A = 10 #5.5
+    B = -3 #-2
+    C = 4 #1.7
     
     for i in range(len(ped.objects)):
 
@@ -93,7 +96,7 @@ def social_force(spot, ped):
 
 def move(delta_time,socialforce, desiredforce, current_velo):
 
-    a = np.add(socialforce,desiredforce)
+    a = np.add(-socialforce,desiredforce)
     v = current_velo + delta_time * a
 
     return v
@@ -101,12 +104,12 @@ def move(delta_time,socialforce, desiredforce, current_velo):
 
 def callback(spot, obj_det):
     global past_time, current_time, velo, flag
-    RelaxationTime = 0.4
-    v_max = 1.0
+    RelaxationTime = 0.5
+    v_max = 0.5
     v_rotate = 0.5
-    goal_x = -4.902107704062697
-    goal_y = -18.595383951711007
-    threshold = 0.2
+    goal_x = 4#-4.902107704062697
+    goal_y = 0#-18.595383951711007
+    threshold = 0.45
 
     if flag == False:
         past_time = rospy.Time.now()
@@ -114,6 +117,8 @@ def callback(spot, obj_det):
 
     spot_velo = np.array([[spot.velocity_of_body_in_odom.linear.x],
                           [spot.velocity_of_body_in_odom.linear.y]])
+    # spot_velo = np.array([[0.3],
+    #                       [-0.95]])
 
     direction = np.array([[goal_x - spot.vision_tform_body.translation.x],
                           [goal_y - spot.vision_tform_body.translation.y]])
@@ -123,7 +128,7 @@ def callback(spot, obj_det):
     g_force = desired_force(desired_direction, v_max, spot_velo, RelaxationTime)
 
     s_force = social_force(spot_velo, obj_det)
-
+    
     if np.linalg.norm(s_force) < threshold:
         resume_checkpoint = 1
     else:
@@ -133,12 +138,21 @@ def callback(spot, obj_det):
     delta_time = float(rospy.Time.__str__(rospy.Time.__sub__(current_time,past_time)))/10**9
     
     new_spot_velo = move(delta_time,s_force, g_force, spot_velo)
-    velo.linear.x = new_spot_velo[0,0]
-    velo.linear.y = new_spot_velo[1,0]
 
-    velo = []
+    forces = '\nrepulsive:  {}    attractive: {}          velo: {}\n           {}               {}               {}\n\nrepul norm: {},    attra norm: {},     velo norm: {}'.format(round(s_force[0,0],3),
+                                                                                                                                                                                    round(g_force[0,0],3),
+                                                                                                                                                                                    round(new_spot_velo[0,0],3),
+                                                                                                                                                                                    round(s_force[1,0],3),
+                                                                                                                                                                                    round(g_force[1,0],3),
+                                                                                                                                                                                    round(new_spot_velo[1,0],3),
+                                                                                                                                                                                    round(np.linalg.norm(s_force),3),
+                                                                                                                                                                                    round(np.linalg.norm(g_force),3),
+                                                                                                                                                                                    round(np.linalg.norm(new_spot_velo)))
+    rospy.loginfo(forces)
 
-    pub.publish(new_spot_velo[0,0], new_spot_velo[1,0], resume_checkpoint, current_checkpoint)
+    velo = [new_spot_velo[0,0], new_spot_velo[1,0], resume_checkpoint, current_checkpoint]
+
+    pub.publish(velo)
     
     past_time = current_time
 
@@ -150,7 +164,6 @@ def main():
     ts = message_filters.ApproximateTimeSynchronizer([spot_kin, object_sub],queue_size = 100, slop = 0.1)
     ts.registerCallback(callback)
 
-    # rospy.Subscriber('/zed2/zed_node/obj_det/objects', zed_interfaces.msg.ObjectsStamped, callback)
     rospy.spin()
     
 if __name__ == '__main__':
