@@ -75,9 +75,9 @@ def social_force(spot, ped):
     forces = 0
     force = 0
     lambda_ = 0.75
-    A = 10 #5.5
-    B = -10.2 #-2
-    C = 10 #1.7
+    A = 0.1 # 10 #5.5
+    B = -4 # -10.2 #-2
+    C = 4.9 # 10 #1.7
     
     for i in range(len(ped.objects)):
 
@@ -146,7 +146,7 @@ def callback(spot, obj_det):
     v_max = 0.
     goal_x = 4.902107704062697
     goal_y = 0.378
-    threshold = 0.005
+    threshold = 0.01
 
     if flag == False:
         past_time = rospy.Time.now()
