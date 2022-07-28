@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from turtle import distance
 import zed_interfaces.msg
 import geometry_msgs.msg
 import std_msgs.msg
@@ -21,6 +22,7 @@ past_time = 0
 current_time = 0
 current_checkpoint = 1
 file_list = []
+v_max = 1.6
 
 path = '/home/prl-orin/ros_ws/src' #Directory to load Pose file from
 load_file_name = "Pose_load.txt"
@@ -75,9 +77,10 @@ def social_force(spot, ped):
     forces = 0
     force = 0
     lambda_ = 0.75
+    x = 0
     A = 0.1 # 10 #5.5
-    B = -4 # -10.2 #-2
-    C = 4.9 # 10 #1.7
+    B = -2.5 # -10.2 #-2
+    C = 5 # 10 #1.7
     
     for i in range(len(ped.objects)):
 
@@ -97,8 +100,10 @@ def social_force(spot, ped):
         # velDiff = spot - ped_velo
 
         # interactionVector = np.add(lambda_ * velDiff, diff)
+
+        x = np.linalg.norm(diff)
         
-        repulsive_force = A*math.exp(B*np.linalg.norm(diff) + C) # Ae^(Bx + C)
+        repulsive_force = A * math.exp(B*x + C) # Ae^(Bx + C)
         
         force = np.array([[diffDirection[0,0]*repulsive_force],
                           [diffDirection[1,0]*repulsive_force]])
@@ -125,10 +130,10 @@ def duration(spot_pose,ped, cc):
         ped_dist = np.append(ped_dist, temp_arr, axis=0)
 
     if len(ped.objects) != 0:
-        if ped_dist.min() > 3 and ped_dist.min() < 4.5:
-            velocity = 0.7
+        if ped_dist.min() > 3 and ped_dist.min() < 4:
+            velocity = 1
         elif ped_dist.min() < 3:
-            velocity = 0.5
+            velocity = 0.7
         else:
             velocity = 1.7 
     
@@ -137,16 +142,15 @@ def duration(spot_pose,ped, cc):
 
     dur = distance_to_checkpoint/velocity
     # rospy.loginfo(velocity)
-    return dur
+    return dur, velocity
         
 
 def callback(spot, obj_det):
-    global past_time, current_time, velo, flag, current_checkpoint, resume_checkpoint
+    global past_time, current_time, velo, flag, current_checkpoint, resume_checkpoint, Poses, v_max
     RelaxationTime = 0.5
-    v_max = 0.
-    goal_x = 4.902107704062697
-    goal_y = 0.378
-    threshold = 0.01
+    goal_x = Poses[current_checkpoint].position.x
+    goal_y = Poses[current_checkpoint].position.y
+    threshold = 0.05
 
     if flag == False:
         past_time = rospy.Time.now()
@@ -176,7 +180,7 @@ def callback(spot, obj_det):
     else:
         resume_checkpoint = 1
 
-    time = duration(spot_position, obj_det, current_checkpoint)
+    time, v_max = duration(spot_position, obj_det, current_checkpoint)
 
     current_time = rospy.Time.now()
     delta_time = float(rospy.Time.__str__(rospy.Time.__sub__(current_time,past_time)))/10**9
@@ -221,4 +225,3 @@ if __name__ == '__main__':
         main()
     except rospy.ROSInterruptException:
         pass
-
