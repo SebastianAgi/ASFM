@@ -114,23 +114,48 @@ def move(delta_time,socialforce, desiredforce, current_velo):
 
     return v
 
+def duration(spot_pose,ped, cc):
+    global Poses
+    velocity = 1.6
+    ped_dist = np.empty((0), float)
+
+    for i in range(len(ped.objects)):
+        temp = np.linalg.norm(np.array([[ped.objects[i].position[0]],[ped.objects[i].position[1]]]))
+        temp_arr = np.array([temp])
+        ped_dist = np.append(ped_dist, temp_arr, axis=0)
+
+    if len(ped.objects) != 0:
+        if ped_dist.min() > 3 and ped_dist.min() < 4.5:
+            velocity = 0.7
+        elif ped_dist.min() < 3:
+            velocity = 0.5
+        else:
+            velocity = 1.7 
+    
+    distance_to_checkpoint = np.linalg.norm(np.array([[Poses[cc].position.x - spot_pose[0,0]],
+                                                        [Poses[cc].position.y - spot_pose[1,0]]]))
+
+    dur = distance_to_checkpoint/velocity
+    # rospy.loginfo(velocity)
+    return dur
+        
 
 def callback(spot, obj_det):
     global past_time, current_time, velo, flag, current_checkpoint, resume_checkpoint
     RelaxationTime = 0.5
-    v_max = 0.5
+    v_max = 0.
     goal_x = 4.902107704062697
     goal_y = 0.378
-    threshold = 0.01
+    threshold = 0.005
 
     if flag == False:
         past_time = rospy.Time.now()
         flag = True
 
-    # spot_velo = np.array([[spot.velocity_of_body_in_odom.linear.x],
-    #                       [spot.velocity_of_body_in_odom.linear.y]])
-    spot_velo = np.array([[1],
-                          [0]])
+    spot_velo = np.array([[spot.velocity_of_body_in_odom.linear.x],
+                          [spot.velocity_of_body_in_odom.linear.y]])
+    # spot_velo = np.array([[1],
+    #                       [0]])
 
     spot_position = np.array([[spot.vision_tform_body.translation.x],
                               [spot.vision_tform_body.translation.y]])
@@ -151,12 +176,14 @@ def callback(spot, obj_det):
     else:
         resume_checkpoint = 1
 
+    time = duration(spot_position, obj_det, current_checkpoint)
+
     current_time = rospy.Time.now()
     delta_time = float(rospy.Time.__str__(rospy.Time.__sub__(current_time,past_time)))/10**9
     
     new_spot_velo = move(delta_time,s_force, g_force, spot_velo)
 
-    velo = [round(new_spot_velo[0,0],3), round(new_spot_velo[1,0],3), resume_checkpoint, current_checkpoint+1]
+    velo = [round(new_spot_velo[0,0],3), round(new_spot_velo[1,0],3), resume_checkpoint, current_checkpoint+1, time]
 
     if len(obj_det.objects) != 0:
         forces = '\nrepulsive:  {}    attractive: {}          velo: {}\n           {}               {}               {}\n\nrepul norm: {},    attra norm: {},     velo norm: {}\nvelo: {}'.format(round(s_force[0,0],3),
@@ -171,7 +198,7 @@ def callback(spot, obj_det):
                                                                                                                                                                                         velo)
         rospy.loginfo(forces)
 
-    # strink = '\n{}\n{}'.format(np.linalg.norm(s_force),velo)
+    strink = '\n{}\n{}'.format(np.linalg.norm(s_force),velo)
     # rospy.loginfo(velo)
 
     pub.publish(velo)
