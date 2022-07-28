@@ -83,11 +83,13 @@ class Pose_record:
         #Service Proxies
         self.pose_srv_pub = rospy.ServiceProxy("pose_cmd", spot_driver.srv.GetPose)
         self.trajectory_srv_pub = rospy.ServiceProxy("trajectory_cmd", spot_driver.srv.Trajectory)
+        self.duration_trajectory_srv_pub = rospy.ServiceProxy("duration_trajectory_cmd", spot_driver.srv.Trajectory_duration)
         self.vel_srv_pub = rospy.ServiceProxy("velocity_cmd", spot_driver.srv.Velocity)
 
         #Sevice Requests 
         self.pose_srv_req = spot_driver.srv.GetPoseRequest()
         self.trajectory_srv_req = spot_driver.srv.TrajectoryRequest()
+        self.duration_trajectory_srv_req = spot_driver.srv.Trajectory_durationRequest()
         self.vel_srv_req = spot_driver.srv.VelocityRequest()
 
         print(instructions)        
@@ -124,12 +126,14 @@ class Pose_record:
             temp = self.pose_srv_pub()
             return temp
 
-    def trajectory_service(self, key, *order):
+    def trajectory_service(self, key, time, *order):
         posex = geometry_msgs.msg.Pose()
         twist = geometry_msgs.msg.Twist()
+        flt = std_msgs.msg.Float64()
         # # dur = []
         # dur = std_msgs.msg.Float32()
         if not order:
+            flt = time
             self.key_pressed = key
             if key=='1':
                 posex = self.Poses[0]
@@ -152,15 +156,16 @@ class Pose_record:
             elif key=='9':
                 posex = self.Poses
 
-            self.trajectory_srv_req.waypoints = posex
+            self.duration_trajectory_srv_req.waypoints = posex
+            self.duration_trajectory_srv_req.duration.data = flt
 
             try:
-                rospy.wait_for_service("trajectory_cmd", timeout=2.0)
-                self.trajectory_srv_pub(self.trajectory_srv_req)
+                rospy.wait_for_service("duration_trajectory_cmd", timeout=2.0)
+                self.duration_trajectory_srv_pub(self.duration_trajectory_srv_req)
             except rospy.ServiceException as e:
                 print("Service call failed: %s"%e, end='')
 
-        elif order and key == 55:
+        else:
             temp = order[0]
             twist.linear.x = temp.data[0]
             twist.linear.y = temp.data[1]
@@ -185,11 +190,12 @@ class Human_avoidance:
 
     def callback(self, msg):
         self.mydata = msg
+        time = self.mydata.data[4]
 
         if self.mydata.data[2] == 0:
-            self.pose_srv.trajectory_service(55,self.mydata)
+            self.pose_srv.trajectory_service(55, time, self.mydata)
         else:
-            self.pose_srv.trajectory_service(str(int(self.mydata.data[3])))
+            self.pose_srv.trajectory_service(str(int(self.mydata.data[3])),time)
 
         
 if __name__ == "__main__":
@@ -211,6 +217,6 @@ if __name__ == "__main__":
         if key in 'tuc':
             Pose_record_ros.pose_service(key)
         elif key in '1234567890':
-            Pose_record_ros.trajectory_service(key)
+            Pose_record_ros.trajectory_service(key, 5.5)
 
         Pose_record_ros.rate.sleep()
