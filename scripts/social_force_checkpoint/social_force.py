@@ -77,10 +77,13 @@ def social_force(spot, ped):
     forces = 0
     force = 0
     lambda_ = 0.75
-    x = 0
-    A = 0.1 # 10 #5.5
-    B = -2.5 # -10.2 #-2
-    C = 5 # 10 #1.7
+#     x = 0
+#     A = 0.1 # 10 #5.5
+#     B = -2.5 # -10.2 #-2
+#     C = 5 # 10 #1.7
+    A = 
+    B = 
+    dt = 0.5
     
     for i in range(len(ped.objects)):
 
@@ -97,13 +100,21 @@ def social_force(spot, ped):
             ped_velo = np.array([[ped.objects[i].velocity[0]],
                                  [ped.objects[i].velocity[1]]])
 
-        # velDiff = spot - ped_velo
-
-        # interactionVector = np.add(lambda_ * velDiff, diff)
-
-        x = np.linalg.norm(diff)
+        velDiff = ped_velo - spot
+        y = velDiff*dt
+        d = np.linalg.norm(diff)
+        b = ( (d + np.linalg.norm(diff - y))**2 - np.linalg.norm(y)**2 )**0.5 / 2
+        initial = A * math.exp(-b/B)
+        second  = (d + np.linalg.norm(diff - y))/(2*b)
+        third_1   = (diff-y)/np.linalg.norm(diff - y)
+        third_2 = 0.5*(diffDirection + third_1)
+        repulsive_force = initial * second * third_2
         
-        repulsive_force = A * math.exp(B*x + C) # Ae^(Bx + C)
+        # interactionVector = np.add(lambda_ * velDiff, diff)
+        # x = np.linalg.norm(diff)
+        # repulsive_force = A * math.exp(B*x + C) # Ae^(Bx + C)
+        
+        
         
         force = np.array([[diffDirection[0,0]*repulsive_force],
                           [diffDirection[1,0]*repulsive_force]])
