@@ -90,16 +90,20 @@ def odom_to_baselink(spot, odom_dir):
 
     angle_to = np.arctan2(spot_dir[0,0]*bl_d_d[1,0] - bl_d_d[0,0]*spot_dir[1,0], spot_dir[0,0]*spot_dir[1,0] + bl_d_d[0,0]*bl_d_d[1,0])
 
+
     if angle_to > 0:
-        if ang_between > 1.0:
-            rotation = 10.0
+        if ang_between*180/np.pi > 5.0:
+            rotation = 0.5
         else:
-            rotation = 1.0
+            rotation = 0.05
     else:
-        if ang_between > 1.0:
-            rotation = -10.0
+        if ang_between*180/np.pi > 5.0:
+            rotation = -0.5
         else:
-            rotation = -1.0
+            rotation = -0.05
+
+    srtang = '\nrotation: {}\nangle_to:\n{}\nang_between:\n{}'.format(rotation,angle_to,ang_between)
+    rospy.loginfo(srtang)
 
     return bl_d_d, rotation
 
@@ -122,8 +126,8 @@ def social_force(spot, ped):
     B = -2 # -10.2 #-2
     C = 6 # 10 #1.7
 
-    A2 = 0.4
-    B2 = 3.5
+    A2 = 10.0
+    B2 = 3.0
     dt = 0.5
     
     for i in range(len(ped.objects)):
@@ -138,56 +142,63 @@ def social_force(spot, ped):
         # Circular model #
         ##################
 
-        if ped.objects[i].action_state == 0:
-            ped_velo = np.array([[0],
-                                 [0]])
-        else:
-            ped_velo = np.array([[ped.objects[i].velocity[0]],
-                                 [ped.objects[i].velocity[1]]])
+        # if ped.objects[i].action_state == 0:
+        #     ped_velo = np.array([[0],
+        #                          [0]])
+        # else:
+        #     ped_velo = np.array([[ped.objects[i].velocity[0]],
+        #                          [ped.objects[i].velocity[1]]])
         
-        # x = np.linalg.norm(diff)
+        # # x = np.linalg.norm(diff)
 
-        velDiff = ped_velo - spot
-        interactionVector = np.add(lambda_ * velDiff, diff)
-        x = np.linalg.norm(interactionVector)
+        # velDiff = ped_velo - spot
+        # interactionVector = np.add(lambda_ * velDiff, diff)
+        # x = np.linalg.norm(interactionVector)
 
-        repulsive_force = A * math.exp(B*x + C) # Ae^(Bx + C)
+        # repulsive_force = A * math.exp(B*x + C) # Ae^(Bx + C)
 
-        force = np.array([[diffDirection[0,0]*repulsive_force],
-                            [diffDirection[1,0]*repulsive_force]])
+        # force = np.array([[diffDirection[0,0]*repulsive_force],
+        #                     [diffDirection[1,0]*repulsive_force]])
 
 
         ####################
         # Elliptical model #
         ####################
 
-        # if ped.objects[i].action_state == 0:
-        #     ped_velo = np.array([[0],
-        #                          [0]])
+        if ped.objects[i].action_state == 0:
+            ped_velo = np.array([[0],
+                                 [0]])
+            # rospy.loginfo('are you standing still?')
+            # velDiff = spot + ped_velo
+            # interactionVector = np.add(lambda_ * velDiff, diff)
+            # x = np.linalg.norm(interactionVector)
+            x = np.linalg.norm(diff)
+            repulsive_force = A * math.exp(B*x + C) # Ae^(Bx + C)
 
-        #     # velDiff = spot + ped_velo
-        #     # interactionVector = np.add(lambda_ * velDiff, diff)
-        #     # x = np.linalg.norm(interactionVector)
-        #     x = np.linalg.norm(diff)
-        #     repulsive_force = A * math.exp(B*x + C) # Ae^(Bx + C)
+            force = np.array([[diffDirection[0,0]*repulsive_force],
+                              [diffDirection[1,0]*repulsive_force]])
 
-        #     force = np.array([[diffDirection[0,0]*repulsive_force],
-        #                       [diffDirection[1,0]*repulsive_force]])
+        else:
+            ped_velo = np.array([[ped.objects[i].velocity[0]],
+                                 [ped.objects[i].velocity[1]]])
 
-        # else:
-        #     ped_velo = np.array([[ped.objects[i].velocity[0]],
-        #                          [ped.objects[i].velocity[1]]])
+            ped_velo_t = np.linalg.norm(ped_velo)
+            y = ped_velo*dt
+            d = np.linalg.norm(diff)
+            
+            b = ( (d + np.linalg.norm(diff - y))**2 - (ped_velo_t*dt)**2 )**0.5 / 2
 
-        #     velDiff = ped_velo - spot
-        #     y = velDiff*dt
-        #     d = np.linalg.norm(diff)
-        #     b = ( (d + np.linalg.norm(diff - y))**2 - np.linalg.norm(y)**2 )**0.5 / 2
-        #     initial = A2 * math.exp(-b/B2)
-        #     second  = (d + np.linalg.norm(diff - y))/(2*b)
-        #     third_1   = (diff-y)/np.linalg.norm(diff - y)
-        #     third_2 = 0.5*(diffDirection + third_1)
-        #     repulsive_force = initial * second * third_2
-        #     force = repulsive_force
+            initial = A2 * math.exp(-b/B2)
+
+            second  = (d + np.linalg.norm(diff - y))/(2*b)
+
+            third_1   = (diff-y)/np.linalg.norm(diff - y)
+
+            third_2 = 0.5*(diffDirection + third_1)
+
+            repulsive_force = initial * second * third_2
+
+            force = repulsive_force
         
         forces += force
     
@@ -208,10 +219,10 @@ def move(delta_time,socialforce, desiredforce, current_velo):
         v[0,0] = max_velo
     elif v[0,0] < -max_velo:
         v[0,0] = -max_velo
-    if v[1,0] > max_velo:
-        v[1,0] = max_velo
-    elif v[1,0] < -max_velo:
-        v[1,0] = -max_velo
+    # if v[1,0] > max_velo:
+    #     v[1,0] = max_velo
+    # elif v[1,0] < -max_velo:
+    #     v[1,0] = -max_velo
 
     # roto = '\na*t: {} + cv: {} =  v: {}\n     {}       {}       {}\n\ndelta_time: {}'.format(round(delta_time*a[0,0],3),round(current_velo[0,0],3),round(v[0,0],3),round(delta_time*a[1,0],3),round(current_velo[1,0],3),round(v[1,0],3), delta_time)
     # rospy.loginfo(roto)
@@ -230,9 +241,9 @@ def duration(spot_pose,ped, cc):
 
     if len(ped.objects) != 0:
         if ped_dist.min() > 3 and ped_dist.min() < 4:
-            velocity = 0.75
+            velocity = 0.85
         elif ped_dist.min() < 3:
-            velocity = 0.5
+            velocity = 0.7
         else:
             velocity = 1
     
