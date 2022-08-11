@@ -32,6 +32,8 @@ rot_vel = 0
 rotation = 0
 leader = None
 leader_too_close = False
+count = 0
+distances = np.array([[0],[0]])
 
 path = '/home/prl-orin/ros_ws/src' #Directory to load Pose file from
 load_file_name = "Pose_load.txt"
@@ -156,6 +158,7 @@ def social_force(spot, ped):
     lambda_ = 0.75
     ids = []
     dists = []
+    to_or_away = []
     leader_too_close = False
 
     x = 0
@@ -167,14 +170,25 @@ def social_force(spot, ped):
     B2 = 3.0
     dt = 0.5
 
+    # Creating an array with all current frame pedestrians' id,distance to spot, and if they are moving away or towards spot 
     for i in range(len(ped.objects)):
+
+        if ped.objects[i].label_id in distances:
+            x,y = np.where(distances == ped.objects[i].label_id)
+            new_dist = sqrt( ped.objects[i].position[0]**2 + ped.objects[i].position[1]**2 )
+            to_or_away.append(np.sign(new_dist - float(distances[int(x),1])))
+        else:
+            to_or_away.append(0)
+
         ids.append(ped.objects[i].label_id)
         dists.append(sqrt( ped.objects[i].position[0]**2 + ped.objects[i].position[1]**2 ))
 
-    distances = np.array([ids,dists]).T
+    distances = np.array([ids,dists,to_or_away]).T
 
+    # Check if leader is still present in current frame pedestrians
     if leader not in distances:
         leader = None
+    # If leader present but too far away, then don't count as leader anymore
     elif leader in distances:
         n,m = np.where(distances == leader)
         if distances[n,1] > 4.0:
@@ -182,6 +196,10 @@ def social_force(spot, ped):
     
     for i in range(len(ped.objects)):
 
+        # Get coordinates of where pedestrian in the current frame distances array 
+        x, y = np.where(distances == ped.objects[i].label_id)
+
+        # Pedestrian position realtive to camera/spot in local distance
         diff = np.array([[ped.objects[i].position[0]+0.25], 
                          [ped.objects[i].position[1]]])
         diffDirection = unit_vector(diff)
@@ -256,10 +274,10 @@ def social_force(spot, ped):
                 force = 0
                 if np.linalg.norm(diff) < 1.5:
                     leader_too_close = True
+
                 rospy.loginfo('\nleader_velo: '+str(leader_velo))
+
             else:
-                
-                
                 ########################################################
                 # Check if reversing ped velo will make a proper force #
                 ########################################################
@@ -285,10 +303,14 @@ def social_force(spot, ped):
 
                 # rospy.loginfo(rep_force)
 
-                force = repulsive_force
-                #############################
-                # CHECK IF IT IS RIGHT TYPE # 
-                #############################
+                #############################################
+                # Force only if pedestrian is coming closer # 
+                #############################################
+
+                if distances[x,2] != 1:
+                    force = 0
+                else:
+                    force = repulsive_force
 
         forces += force
 
@@ -303,7 +325,7 @@ def social_force(spot, ped):
     return forces
 
 def move(delta_time,socialforce, desiredforce, current_velo, allowed_v, follow_flag):
-    global leader_velo
+    global leader_velo, count
     multiplier = 0
 
     if follow_flag == True:
@@ -335,10 +357,16 @@ def move(delta_time,socialforce, desiredforce, current_velo, allowed_v, follow_f
     clampedv = np.array([[v[0,0]*multiplier],[v[1,0]*multiplier]])
     
 
-    # stop backwards walking
+    # stop backwards walking, but allow it after waitibg for (50/15) = 3.33 sec
 
     if clampedv[0,0] < -0.01:
-        clampedv[0,0] = 0
+        count += 1
+        if count > 50:
+            clampedv[0,0] = 0
+    
+    if clampedv[0,0] > 0.0:
+        count = 0
+
 
     if leader_too_close == True:
         clampedv = np.zeros([2,1])
