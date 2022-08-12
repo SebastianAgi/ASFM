@@ -152,8 +152,8 @@ def desired_force(desired_direction, vmax, current_velo, RelaxationTime):
 #spot is an np array (x,y vector), ped is obj_det_.objects
 def social_force(spot, ped):
     global spot_velo, s_force, follow_flag, people_nearby, leader_pos, distances, leader, leader_velo, leader_too_close
-    forces = 0
-    force = 0
+    forces = np.array([[0],[0]])
+    force = np.array([[0],[0]])
     threshold = 0.1
     lambda_ = 0.75
     ids = []
@@ -163,7 +163,7 @@ def social_force(spot, ped):
 
     x = 0
     A = 0.1 # 10 #5.5
-    B = -2 # -10.2 #-2
+    B = -2.2 # -10.2 #-2
     C = 6 # 10 #1.7
 
     A2 = 6.0
@@ -176,7 +176,7 @@ def social_force(spot, ped):
         if ped.objects[i].label_id in distances:
             x,y = np.where(distances == ped.objects[i].label_id)
             new_dist = sqrt( ped.objects[i].position[0]**2 + ped.objects[i].position[1]**2 )
-            to_or_away.append(np.sign(new_dist - float(distances[int(x),1])))
+            to_or_away.append(np.sign(new_dist - float(distances[int(x),1])))   # coming closer is represented by (-1)
         else:
             to_or_away.append(0)
 
@@ -184,7 +184,7 @@ def social_force(spot, ped):
         dists.append(sqrt( ped.objects[i].position[0]**2 + ped.objects[i].position[1]**2 ))
 
     distances = np.array([ids,dists,to_or_away]).T
-
+    rospy.loginfo(distances)
     # Check if leader is still present in current frame pedestrians
     if leader not in distances:
         leader = None
@@ -245,10 +245,12 @@ def social_force(spot, ped):
             if ped.objects[i].label_id == leader:
                 leader_pos = diff
                 leader_velo = np.array([[0],[0]])
-                force = 0
+                force = np.array([[0],[0]])
 
                 if np.linalg.norm(diff) < 0.5:
                     leader_too_close = True
+
+            rospy.loginfo(1_1)
 
         # If pedestrian is moving apply an elliptical force model
         else:
@@ -271,11 +273,12 @@ def social_force(spot, ped):
                 follow_flag = True
                 leader_pos = diff
                 leader_velo = ped_velo
-                force = 0
+                force = np.array([[0],[0]])
                 if np.linalg.norm(diff) < 1.5:
                     leader_too_close = True
 
-                rospy.loginfo('\nleader_velo: '+str(leader_velo))
+                rospy.loginfo(2_2)
+                # rospy.loginfo('\nleader_velo: '+str(leader_velo))
 
             else:
                 ########################################################
@@ -283,7 +286,7 @@ def social_force(spot, ped):
                 ########################################################
 
                 ped_velo_t = np.linalg.norm(ped_velo)
-                y = ped_velo*dt
+                y = -ped_velo*dt
                 d = np.linalg.norm(diff)
                 
                 b = ( (d + np.linalg.norm(diff - y))**2 - (ped_velo_t*dt)**2 )**0.5 / 2
@@ -298,25 +301,20 @@ def social_force(spot, ped):
 
                 repulsive_force = initial * second * third_2
 
-                rep_force = np.array([[repulsive_force[0,0]],
-                                      [repulsive_force[1,0]]])
-
-                # rospy.loginfo(rep_force)
+                string1 = '\nb: {}\ninitial: {}\nsecond: {}\nthird_2: {}\nrep_force: {}\n'.format(b,initial,second,third_2,repulsive_force)
+                rospy.loginfo(string1)
 
                 #############################################
                 # Force only if pedestrian is coming closer # 
                 #############################################
 
-                if distances[x,2] != 1:
-                    force = 0
+                if distances[x,2] != -1:
+                    force = np.array([[0],[0]])
                 else:
                     force = repulsive_force
 
-        forces += force
-
-        strung = '\nforce: {}'.format(forces)
-        rospy.loginfo(strung)
-    
+        forces = np.add(forces,force)
+        rospy.loginfo(forces)
         if np.linalg.norm(forces) > 0:
             people_nearby = True
         else:
@@ -334,7 +332,7 @@ def move(delta_time,socialforce, desiredforce, current_velo, allowed_v, follow_f
 
         # reinforce sideways walk if directed head on
         ratio = socialforce[0,0]/socialforce[1,0]
-        if ratio > 1:
+        if ratio > 1.0:
             socialforce[1,0] = abs(ratio)*socialforce[1,0]
 
         a = np.add(-socialforce,desiredforce)
@@ -342,7 +340,7 @@ def move(delta_time,socialforce, desiredforce, current_velo, allowed_v, follow_f
     v = current_velo + delta_time * a
     
     max_velo = allowed_v
-    rospy.loginfo('\nallowed_velo: '+str(allowed_v))
+    # rospy.loginfo('\nallowed_velo: '+str(allowed_v))
     
     if leader != None:
         max_velo = np.linalg.norm(leader_velo)
@@ -358,10 +356,11 @@ def move(delta_time,socialforce, desiredforce, current_velo, allowed_v, follow_f
     
 
     # stop backwards walking, but allow it after waitibg for (50/15) = 3.33 sec
+    # waiting to allow backward might not work as oncoming people can give negative x velo
 
     if clampedv[0,0] < -0.01:
         count += 1
-        if count > 50:
+        if count > 100:
             clampedv[0,0] = 0
     
     if clampedv[0,0] > 0.0:
@@ -371,7 +370,7 @@ def move(delta_time,socialforce, desiredforce, current_velo, allowed_v, follow_f
     if leader_too_close == True:
         clampedv = np.zeros([2,1])
 
-    rospy.loginfo('\nspot_velo:' + str(clampedv))
+    # rospy.loginfo('\nspot_velo:' + str(clampedv))
     return clampedv
 
 def duration(spot_pose,ped, cc):
@@ -428,7 +427,7 @@ def callback(spot, obj_det):
         goal_y = spot_position[1,0] + odom_leader_pos[1,0]
 
         stringu = '\ngoal_x: {}\ngoal_y :{}\nspot_coord: {}\n'.format(goal_x,goal_y, spot_position)
-        rospy.loginfo(stringu)
+        # rospy.loginfo(stringu)
     
     else:
         goal_x = Poses[current_checkpoint].position.x
@@ -475,7 +474,7 @@ def callback(spot, obj_det):
     #     rospy.loginfo(forces)
 
     # strink = '\n{}\n{}'.format(np.linalg.norm(s_force),velo)
-    rospy.loginfo(velo)
+    # rospy.loginfo(velo)
 
     pub.publish(velo)
     
