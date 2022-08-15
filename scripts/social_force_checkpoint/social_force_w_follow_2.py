@@ -214,7 +214,7 @@ def social_force(spot, ped):
         x, y = np.where(distances == ped.objects[i].label_id)
 
         # Pedestrian position realtive to camera/spot in local distance
-        diff = np.array([[ped.objects[i].position[0]], 
+        diff = np.array([[ped.objects[i].position[0] - 0.4], 
                          [ped.objects[i].position[1]]])
         diffDirection = unit_vector(diff)
         diffDirection = np.reshape(diffDirection, (2,1))
