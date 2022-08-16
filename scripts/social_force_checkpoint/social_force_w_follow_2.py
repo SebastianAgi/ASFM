@@ -33,7 +33,9 @@ rotation = 0
 leader = None
 leader_too_close = False
 count = 0
+alone_count = 0
 distances = np.array([[0],[0]])
+motion_count = 0
 
 path = '/home/prl-orin/ros_ws/src' #Directory to load Pose file from
 load_file_name = "Pose_load.txt"
@@ -115,14 +117,14 @@ def odom_to_baselink(spot, odom_dir):
         if angle_to > 0:
             if degree > 45.0:
                 rot_vel = 1.5
-            elif int(degree) in range(5, 45):
+            elif int(degree) in range(10, 45):
                 rot_vel = 0.5
             else:
                 rot_vel = 0.05
         else:
             if degree > 45.0:
                 rot_vel = -1.5
-            elif int(degree) in range(5, 45):
+            elif int(degree) in range(10, 45):
                 rot_vel = -0.5
             else:
                 rot_vel = -0.05
@@ -155,7 +157,7 @@ def desired_force(desired_direction, vmax, current_velo, RelaxationTime):
 
 #spot is an np array (x,y vector), ped is obj_det_.objects
 def social_force(spot, ped):
-    global spot_velo, s_force, follow_flag, people_nearby, leader_pos, distances, leader, leader_velo, leader_too_close
+    global spot_velo, s_force, follow_flag, people_nearby, leader_pos, distances, leader, leader_velo, leader_too_close, alone_count
     forces = np.array([[0],[0]])
     force = np.array([[0],[0]])
     threshold = 0.1
@@ -163,14 +165,16 @@ def social_force(spot, ped):
     ids = []
     dists = []
     to_or_away = []
+    less_than_4 = []
+    past_leader = []
     leader_too_close = False
 
     if follow_flag == False:
-        A = 0.5 # 10 #5.5
+        A = 0.1 # 10 #5.5
         B = -2.2 # -10.2 #-2
         C = 6 # 10 #1.7
     else:
-        A = 0.5
+        A = 0.05
         B = -4
         C = 3
 
@@ -181,7 +185,7 @@ def social_force(spot, ped):
 
     # Creating an array with all current frame pedestrians' id,distance to spot, and if they are moving away or towards spot 
     for i in range(len(ped.objects)):
-
+        #going towards or away from spot
         if ped.objects[i].label_id in distances:
             x,y = np.where(distances == ped.objects[i].label_id)
             new_dist = sqrt( ped.objects[i].position[0]**2 + ped.objects[i].position[1]**2 )
@@ -192,21 +196,39 @@ def social_force(spot, ped):
         else:
             to_or_away.append(0)
 
+        #ID tags of people in current frame
         ids.append(ped.objects[i].label_id)
+        #Distance to people in current frame
         dists.append(sqrt( ped.objects[i].position[0]**2 + ped.objects[i].position[1]**2 ))
+        # Tag of people are less than 4 meters away
+        if sqrt( ped.objects[i].position[0]**2 + ped.objects[i].position[1]**2 ) < 4.0:
+            less_than_4.append(1)
+        else:
+            less_than_4.append(0)
+        #crete empty column to populate if leader is no longer to be followed
+        past_leader.append(0)
 
-    distances = np.array([ids,dists,to_or_away]).T
+    distances = np.array([ids,dists,to_or_away, less_than_4, past_leader]).T
     rospy.loginfo(distances)
+
     # Check if leader is still present in current frame pedestrians
     if leader not in distances:
         leader = None
         rospy.loginfo('No leader')
     # If leader present but too far away, then don't count as leader anymore
+    # or if leader is the only person within 4 m for more than 10 sec, then stop follow
     elif leader in distances:
         n,m = np.where(distances == leader)
         if distances[n,1] > 4.0:
             leader = None 
-            rospy.loginfo('No leader')      
+            rospy.loginfo('No leader')
+        elif np.count_nonzero(distances[:,1] < 4.0) == 1:
+            if alone_count == 75: # 1/15hz so 75 iter will be 5 sec
+                leader = None
+                distances[n,4] = 1
+            alone_count += 1
+        else:
+            alone_count = 0
     
     for i in range(len(ped.objects)):
 
@@ -219,35 +241,9 @@ def social_force(spot, ped):
         diffDirection = unit_vector(diff)
         diffDirection = np.reshape(diffDirection, (2,1))
 
-
-        ##################
-        # Circular model #
-        ##################
-
-        # if ped.objects[i].action_state == 0:
-        #     ped_velo = np.array([[0],
-        #                          [0]])
-        # else:
-        #     ped_velo = np.array([[ped.objects[i].velocity[0]],
-        #                          [ped.objects[i].velocity[1]]])
-        
-        # # x = np.linalg.norm(diff)
-
-        # velDiff = ped_velo - spot
-        # interactionVector = np.add(lambda_ * velDiff, diff)
-        # x = np.linalg.norm(interactionVector)
-
-        # repulsive_force = A * math.exp(B*x + C) # Ae^(Bx + C)
-
-        # force = np.array([[diffDirection[0,0]*repulsive_force],
-        #                     [diffDirection[1,0]*repulsive_force]])
-
-
-        ####################
-        # Elliptical model #
-        ####################
-
-        # If pedestrian stands still apply a circular force model
+        ########################################
+        # Circular model for static pedesrians #
+        ########################################
         if ped.objects[i].action_state == 0:
 
             x = np.linalg.norm(diff)
@@ -285,7 +281,7 @@ def social_force(spot, ped):
 
             x_ind,y_ind = np.unravel_index(np.argmin(distances, axis = None),distances.shape)
 
-            if ped_spot_ang*180/np.pi < 20 and distances[x_ind,0] == ped.objects[i].label_id and distances[x_ind,1] < 4.0 and leader == None and people_nearby == True:
+            if ped_spot_ang*180/np.pi < 30 and distances[x_ind,0] == ped.objects[i].label_id and distances[x_ind,1] < 4.0 and leader == None and people_nearby == True and distances[x_ind,4] != 1:
                 strong = '\nthere is a leader now, id:{}\nangle:{}'.format(ped.objects[i].label_id,ped_spot_ang*180/np.pi)
                 rospy.loginfo(strong)
                 
@@ -301,17 +297,19 @@ def social_force(spot, ped):
                 # rospy.loginfo('\nleader_velo: '+str(leader_velo))
 
             else:
+
                 #############################################
                 # Force only if pedestrian is coming closer # 
                 #############################################
-
                 if distances[x,2] != -1:
                     force = np.array([[0],[0]])
+
+                ####################
+                # Elliptical model #
+                ####################
                 else:
 
-                    ########################################################
-                    # Check if reversing ped velo will make a proper force #
-                    ########################################################
+                    # Check if reversing ped velo will make a proper force
 
                     ped_velo_t = np.linalg.norm(ped_velo)
                     y = -ped_velo*dt
@@ -352,14 +350,14 @@ def move(delta_time,socialforce, desiredforce, current_velo, allowed_v, follow_f
     # else:
 
     # reinforce sideways walk if directed head on
-    rospy.loginfo('\nsf(0,0)'+str(socialforce[0,0])+'\nsc(1,0):'+str(socialforce[1,0]))
-    if socialforce[0,0] == 0 and socialforce[1,0] == 0:
-        ratio = 1.0
-    else:
-        ratio = socialforce[0,0]/abs(socialforce[1,0])
+    # rospy.loginfo('\nsf(0,0)'+str(socialforce[0,0])+'\nsc(1,0):'+str(socialforce[1,0]))
+    # if socialforce[0,0] == 0 and socialforce[1,0] == 0:
+    #     ratio = 1.0
+    # else:
+    #     ratio = socialforce[0,0]/abs(socialforce[1,0])
 
-    if ratio > 1.0:
-        socialforce[1,0] = ratio*socialforce[1,0]
+    # if ratio > 1.5:
+    #     socialforce[1,0] = ratio*socialforce[1,0]
 
     a = np.add(-socialforce,desiredforce)
 
@@ -419,11 +417,11 @@ def duration(spot_pose,ped, cc):
 
     if len(ped.objects) != 0:
         if distances[:,1].min() > 3 and distances[:,1].min() < 4:
-            velocity = 0.85
+            velocity = 1.0
         elif distances[:,1].min() < 3:
             velocity = 0.7
         else:
-            velocity = 1
+            velocity = 1.6
     
     distance_to_checkpoint = np.linalg.norm(np.array([[Poses[cc].position.x - spot_pose[0,0]],
                                                       [Poses[cc].position.y - spot_pose[1,0]]]))
@@ -435,16 +433,24 @@ def duration(spot_pose,ped, cc):
 
 def callback(spot, obj_det):
     global past_time, current_time, spot_velo, velo, flag, current_checkpoint, resume_checkpoint, Poses, rot_vel
-    global follow_flag, leader_pos, rotation, leader
+    global follow_flag, leader_pos, rotation, leader, motion_count
     allowed_velo = 1
     angle_to_goal = 0
     RelaxationTime = 0.5
     v_max = 1
 
+    real_spot_velo = np.array([[spot.velocity_of_body_in_vision.linear.x],
+                               [spot.velocity_of_body_in_vision.linear.y]])
+
+    if np.linalg.norm(real_spot_velo) < 0.1 and np.linalg.norm(spot_velo) > 0.1:
+        motion_count +=1
+    else:
+        motion_count = 0
+            
+
     if flag == False:
         past_time = rospy.Time.now()
-        spot_velo = np.array([[spot.velocity_of_body_in_vision.linear.x],
-                              [spot.velocity_of_body_in_vision.linear.y]])
+        spot_velo = real_spot_velo
         flag = True
 
     s_force = social_force(spot_velo, obj_det)
@@ -490,6 +496,11 @@ def callback(spot, obj_det):
     past_time = current_time
     
     new_spot_velo = move(delta_time,s_force, g_force, spot_velo, allowed_velo, follow_flag)
+
+    if motion_count == 45:
+        rospy.loginfo('I should wait now')
+        new_spot_velo = np.zeros([2,1])
+        #put in entry in FloatList to make spot sit/oor shake or give some sort of signal
 
     velo = [new_spot_velo[0,0], new_spot_velo[1,0], 0, current_checkpoint+1, time, rot_vel]
     spot_velo = new_spot_velo
