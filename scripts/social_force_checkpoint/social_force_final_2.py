@@ -94,7 +94,7 @@ def ellipse_center_dist(angle, a, b):
 def a_b_from_velo(velo):
     tot = np.linalg.norm(velo)
     a = 1.5 + 2*tot
-    b = 1 + tot/4
+    b = 1 + tot/10
     return a, b
 
 def c_rotation(vector, angle):
