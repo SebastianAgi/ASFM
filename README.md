@@ -35,10 +35,10 @@ roslaunch zed_wrapper zed2i.launch
 In a fourth terminal ssh into the Jetosn Orin and run the model script:
 ```
 (SFM)
-rosrun zed_object SFM.py
+rosrun zed_obj_det_sub_tutorial SFM.py
 
 (ASFM)
-rosrun zed_obj_det_ ASFM.py
+rosrun zed_obj_det_sub_tutorial ASFM.py
 ```
 
 ## Syste integration
