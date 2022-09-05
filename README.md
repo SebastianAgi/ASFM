@@ -42,9 +42,6 @@ rosrun zed_obj_det_ ASFM.py
 ```
 
 ## Syste integration
-
-![system_poster](https://user-images.githubusercontent.com/66956640/188483403-e3673c34-27d7-48ba-b504-c0e2d04e01e1.jpg)
-
 <img src="https://user-images.githubusercontent.com/66956640/188483403-e3673c34-27d7-48ba-b504-c0e2d04e01e1.jpg" alt="" data-canonical-src="[](https://user-images.githubusercontent.com/66956640/188483403-e3673c34-27d7-48ba-b504-c0e2d04e01e1.jpg)" width="618" height="500" />
 
 
