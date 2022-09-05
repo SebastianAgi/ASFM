@@ -17,6 +17,10 @@ The mobile robot system used in this project:
 <img src="https://user-images.githubusercontent.com/66956640/188476203-c055e23c-2813-4460-a432-e5dfed2b4cf9.png" alt="" data-canonical-src="[](https://user-images.githubusercontent.com/66956640/188476203-c055e23c-2813-4460-a432-e5dfed2b4cf9.png)" width="537" height="500" />
 
 
+## Syste integration
+<img src="https://user-images.githubusercontent.com/66956640/188483403-e3673c34-27d7-48ba-b504-c0e2d04e01e1.jpg" alt="" data-canonical-src="[](https://user-images.githubusercontent.com/66956640/188483403-e3673c34-27d7-48ba-b504-c0e2d04e01e1.jpg)" width="618" height="500" />
+
+
 ## Running the code
 
 the script get_pose.py and spot_interface.py are python scripts to run on Boston Dynamics Spot.
@@ -44,6 +48,3 @@ rosrun zed_obj_det_sub_tutorial SFM.py
 (ASFM)
 rosrun zed_obj_det_sub_tutorial ASFM.py
 ```
-
-## Syste integration
-<img src="https://user-images.githubusercontent.com/66956640/188483403-e3673c34-27d7-48ba-b504-c0e2d04e01e1.jpg" alt="" data-canonical-src="[](https://user-images.githubusercontent.com/66956640/188483403-e3673c34-27d7-48ba-b504-c0e2d04e01e1.jpg)" width="618" height="500" />
