@@ -1,0 +1,161 @@
+1
+time_to_goal: 13535309315   
+avg_velo: [[0.67370945]
+ [0.01441753]]   
+||avg_velo||: 0.673863703434543   
+distance travelled: 9.74496099797514
+
+
+2
+time_to_goal: 18492223740   
+avg_velo: [[0.5443672 ]
+ [0.01032441]]   
+||avg_velo||: 0.5444650936204162   
+distance travelled: 10.183197773802359
+
+
+3
+time_to_goal: 12395095587   
+avg_velo: [[ 0.72990108]
+ [-0.03696608]]   
+||avg_velo||: 0.7308365583378222   
+distance travelled: 9.236207399483611
+
+
+4
+time_to_goal: 12189685583   
+avg_velo: [[ 7.38067111e-01]
+ [-4.77325559e-04]]   
+||avg_velo||: 0.7380672654899293   
+distance travelled: 8.97350462346305
+
+
+5
+time_to_goal: 11475399256   
+avg_velo: [[ 0.78207579]
+ [-0.02159496]]   
+||avg_velo||: 0.7823738770753346   
+distance travelled: 8.816847905689768
+Not comfy: first close to jia, then to me (aka opposite behavior of what is expected)
+
+
+6
+time_to_goal: 12930794001   
+avg_velo: [[0.67525557]
+ [0.07279104]]   
+||avg_velo||: 0.6791675925080661   
+distance travelled: 9.109839988274583
+
+
+7
+time_to_goal: 16482232332   
+avg_velo: [[ 0.56193586]
+ [-0.02225619]]   
+||avg_velo||: 0.5623764300610129   
+distance travelled: 9.320865791166684
+good for jia - then started following, and then went on (stopped following)
+
+
+8
+time_to_goal: 18088947296   
+avg_velo: [[0.51085647]
+ [0.04354939]]   
+||avg_velo||: 0.5127093507178783   
+distance travelled: 9.856074980926046
+good for jia - started follow- stopped follow and distanced from me
+
+9
+time_to_goal: 12727231026   
+avg_velo: [[ 0.68273957]
+ [-0.03220481]]   
+||avg_velo||: 0.6834986942857904   
+distance travelled: 8.606740851077683
+
+
+10
+time_to_goal: 11655161143   
+avg_velo: [[ 0.74903135]
+ [-0.08648962]]   
+||avg_velo||: 0.7540082363167897   
+distance travelled: 8.645969908296466
+
+
+11
+time_to_goal: 12390698433   
+avg_velo: [[ 0.70526831]
+ [-0.00588119]]   
+||avg_velo||: 0.7052928314529844   
+distance travelled: 9.283336449665331
+
+
+12
+time_to_goal: 16883980274   
+avg_velo: [[0.5119075 ]
+ [0.07802811]]   
+||avg_velo||: 0.5178201184337532   
+distance travelled: 9.49778316116367
+
+
+13
+time_to_goal: 17284060240   
+avg_velo: [[0.49698841]
+ [0.05885329]]   
+||avg_velo||: 0.5004609735690526   
+distance travelled: 9.41509138956394
+
+
+14
+time_to_goal: 12128715753   
+avg_velo: [[0.66615614]
+ [0.03669779]]   
+||avg_velo||: 0.667166195293377   
+distance travelled: 8.681557127113045
+
+
+15
+time_to_goal: 15546005011   
+avg_velo: [[0.58714375]
+ [0.11405653]]   
+||avg_velo||: 0.5981192770733148   
+distance travelled: 9.773359785218876
+
+
+16
+time_to_goal: 11720547915   
+avg_velo: [[0.70384097]
+ [0.04653101]]   
+||avg_velo||: 0.7053773805056975   
+distance travelled: 8.94130562820996
+
+
+17
+time_to_goal: 16782321214   
+avg_velo: [[ 0.53851986]
+ [-0.00740783]]   
+||avg_velo||: 0.5385708093886868   
+distance travelled: 9.261423670910753
+
+
+18
+time_to_goal: 11655598641   
+avg_velo: [[0.69370612]
+ [0.02147322]]   
+||avg_velo||: 0.694038388519551   
+distance travelled: 8.501221498146437
+
+
+19
+time_to_goal: 14870304346   
+avg_velo: [[0.57102493]
+ [0.05799381]]   
+||avg_velo||: 0.5739623281453828   
+distance travelled: 9.661749628609936
+
+
+20
+time_to_goal: 13668357611   
+avg_velo: [[ 0.63438006]
+ [-0.02560745]]   
+||avg_velo||: 0.6348966858623607   
+distance travelled: 8.42833468153339
+

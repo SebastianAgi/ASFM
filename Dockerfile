@@ -1,57 +1,89 @@
-FROM personalroboticsimperial/prl:jetson2004-noetic
-SHELL ["/bin/bash", "-c"] 
+FROM ubuntu:20.04
 
-RUN apt-get update -y && DEBIAN_FRONTEND=noninteractive apt-get install -y \
+LABEL maintainer "Rodrigo Chacon <rac17@ic.ac.uk>"
+
+ENV DEBIAN_FRONTEND noninteractive
+ENV LANG C.UTF-8
+ENV LC_ALL C.UTF-8
+ENV ROS_DISTRO noetic
+ENV MSCL_LIB_PATH /usr/share/c++-mscl
+
+SHELL ["/bin/bash","-c"]
+
+# setup timezone
+RUN echo 'Etc/UTC' > /etc/timezone && \
+    ln -s /usr/share/zoneinfo/Etc/UTC /etc/localtime && \
+    apt-get update && \
+    apt-get install -q -y --no-install-recommends tzdata && \
+    rm -rf /var/lib/apt/lists/*
+
+# install packages
+RUN apt-get update && apt-get install -q -y --no-install-recommends \
+    dirmngr \
+    gnupg2 \
+    && rm -rf /var/lib/apt/lists/*
+
+# setup the sources list
+RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu focal main" > /etc/apt/sources.list.d/ros-latest.list'
+
+# setup keys
+RUN apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
+
+# built-in packages
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ros-noetic-ros-base \
+    && apt-get autoclean \
+    && apt-get autoremove \
+    # Clear apt-cache to reduce image size
+    && rm -rf /var/lib/apt/lists/*
+
+RUN echo "source /opt/ros/noetic/setup.bash" >> /root/.bashrc
+
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    python3-rosdep \
+    python3-rosinstall \
+    python3-rosinstall-generator \
+    python3-wstool \
+    # Basic utilities
+    iputils-ping \
     wget \
-    git \
+    # ROS packages
+    ros-$ROS_DISTRO-joy \
+    ros-$ROS_DISTRO-cv-bridge \
+    ros-$ROS_DISTRO-tf2-tools \
+    ros-$ROS_DISTRO-tf \
+    ros-${ROS_DISTRO}-xacro \
+    ros-${ROS_DISTRO}-joint-state-publisher \
+    ros-${ROS_DISTRO}-robot-state-publisher \
+    ros-${ROS_DISTRO}-rviz \
     build-essential \
-    cmake \
-    gcc-8 \
-    g++-8 && \
-    update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 8 && \
-    update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 8
+    --no-install-recommends \
+    && apt-get autoclean \
+    && apt-get autoremove \
+    # Clear apt-cache to reduce image size
+    && rm -rf /var/lib/apt/lists/*
 
-#####################################################################################################
-############################################# ZED SDK ###############################################
-#####################################################################################################
-WORKDIR /zed
+# Spot PRL
+RUN apt-get update && apt-get install -y \
+    && pip3 install catkin_tools pyyaml rospkg PyQt5 pydot readchar empy defusedxml
 
-COPY .nv_tegra_release /etc/nv_tegra_release
+# Boston Dynamics API
+RUN python3 -m pip install bosdyn-client==3.0.0 bosdyn-mission==3.0.0 bosdyn-choreography-client==3.0.0
 
-RUN wget -q -O ZED_SDK_Jetson_326.run https://download.stereolabs.com/zedsdk/3.7/l4t32.6/jetsons
-RUN chmod +x ZED_SDK_Jetson_326.run && \
-    DEBIAN_FRONTEND=noninteractive ./ZED_SDK_Jetson_326.run -- silent skip_tools && \
-    rm ZED_SDK_Jetson_326.run
+# RUN python3 -m pip install --upgrade time 
+# protobuf bosdyn-client
 
-RUN apt-get update -y && apt-get install --no-install-recommends python3-pip -y && \
-    wget download.stereolabs.com/zedsdk/pyzed -O /usr/local/zed/get_python_api.py &&  \
-    python3 /usr/local/zed/get_python_api.py && \
-    python3 -m pip install numpy opencv-python *.whl && \
-    rm *.whl
+WORKDIR /workspace
+RUN rosdep init && rosdep update
 
-#####################################################################################################
-############################################ ROS PACKAGE ############################################
-#####################################################################################################
+# Create local catkin ws
+ENV CATKIN_WS=/catkin_ws
+RUN mkdir -p $CATKIN_WS/src
+# Set the working directory to /catkin_ws
+WORKDIR $CATKIN_WS
+RUN source /opt/ros/$ROS_DISTRO/setup.bash \
+    && catkin_make -DCMAKE_BUILD_TYPE=Release
 
-RUN mkdir -p /root/ros_ws/src/
-
-WORKDIR /root/ros_ws/
-
-#RUN cd src && git clone --recurse-submodules -j8 https://github.com/stereolabs/zed-ros-wrapper.git
-
-RUN apt update && DEBIAN_FRONTEND=noninteractive rosdep install --from-paths src --ignore-src -r -y && rm -rf /var/lib/apt/lists/*
-RUN python3 -m pip install opencv-contrib-python
-
-RUN apt-get update -y && DEBIAN_FRONTEND=noninteractive apt-get install -y \
-    ros-noetic-image-transport \
-    ros-noetic-tf2-ros \
-    ros-noetic-tf2-geometry-msgs \
-    ros-noetic-diagnostic-updater \
-    libusb-1.0-0-dev \
-    ros-noetic-xacro \
-    ros-robot-state-publisher
-
-RUN source /opt/ros/noetic/setup.bash && \
-    catkin config --cmake-args -DCMAKE_CXX_FLAGS="-Wl,--allow-shlib-undefined"
-
-CMD echo $ROS_MASTER_URI && bash
+CMD ["bash"]
