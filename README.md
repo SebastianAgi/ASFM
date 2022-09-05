@@ -7,13 +7,14 @@ In this repository are the python scripts for the implementations of the Social 
 
 Sebastian Aegidius' MSc thesis report is also available in this repository.
 
+## Video Demonstration
+[Here](https://youtu.be/36d5Frar4pE) is a link to a video demonstration of the two models implemented on the robot system.
 
+
+## Mobile Robot
 The mobile robot system used in this project:
 
 <img src="https://user-images.githubusercontent.com/66956640/188476203-c055e23c-2813-4460-a432-e5dfed2b4cf9.png" alt="" data-canonical-src="[](https://user-images.githubusercontent.com/66956640/188476203-c055e23c-2813-4460-a432-e5dfed2b4cf9.png)" width="537" height="500" />
-
-## Video Demonstration
-[Here](https://youtu.be/36d5Frar4pE) is a link to a video demonstration of the two models implemented on the robot system.
 
 
 ## Running the code
