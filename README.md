@@ -48,3 +48,4 @@ rosrun zed_obj_det_sub_tutorial SFM.py
 (ASFM)
 rosrun zed_obj_det_sub_tutorial ASFM.py
 ```
+the beginning and end point coordinates can be changed in the Pose_load.txt file
