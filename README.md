@@ -19,9 +19,9 @@ the script get_pose.py and spot_interface.py are python scripts to run on Boston
 
 The SFM.py is the SFM implementation, and ASFM.py is the ASFM implementation. Both scripts require a zed2i stereo camera feed to post on the local ROS master url to work as they use both the Spot kinematic_state topic and certain topics form the Zed2i's human detection.
 
-VNC into SpotCore and run
+VNC into Spot and launch the SpotCore:
 ```
-make body_driver #starts SpotCore
+make body_driver
 ```
 In a second terminal run:
 ```
