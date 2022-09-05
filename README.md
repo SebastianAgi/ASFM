@@ -6,7 +6,7 @@ repository containing resources for Sebastian Aegidius' MSc thesis project!
 In this repository are the python scripts for the implementations of the Social Force Model (SFM) and novel Augmented Social Force Model (ASFM) on the Boston Dynamics Spot robot for mobile navigation.
 
 The mobile robot used in this project:
-![spot shown](https://user-images.githubusercontent.com/66956640/188476203-c055e23c-2813-4460-a432-e5dfed2b4cf9.png)
+![spot shown](https://user-images.githubusercontent.com/66956640/188476203-c055e23c-2813-4460-a432-e5dfed2b4cf9.png | width=100)
 
 Sebastian Aegidius' MSc thesis report is also available in this repository.
 
