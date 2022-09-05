@@ -1,4 +1,7 @@
-# Social Navigation
-Sebastian's MSc project!
+# Social Navigation For A Quadruped Mobile Robot
+repository for Sebastian Aegidius' MSc project!
 
-So far learning how to work in a docker container and using the ZED2 camera for human motion tracking.
+In this repository are the python scripts for the implementations of the Social Force Model (SFM) and novel Augmented Social Force Model (ASFM) on the Boston Dynamics Spot robot for mobile navigation.
+
+
+Here is a link to a video demonstration of the two models implemented.
