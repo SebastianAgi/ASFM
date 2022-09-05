@@ -17,7 +17,7 @@ The mobile robot system used in this project:
 
 the script get_pose.py and spot_interface.py are python scripts to run on Boston Dynamics Spot.
 
-The SFM.py is the SFM implementation, and ASFM.py is the ASFM implementation. Both scripts require a zed2i stereo camera feed to post on the local ROS master url to work as they use both the Spot kinematic_state topic and certain topics form the Zed2i's human detection.
+The SFM.py is the SFM implementation, and ASFM.py is the ASFM implementation. Both scripts require a zed2i stereo camera feed to post on the local ROS master url to work as they use both the Spot kinematic_state topic and certain topics form the Zed2i's human detection. Make sure to have the Pose_load.txt file in the ROS workspace on the SpotCore and in the ROS workspace on the Orin.
 
 VNC into Spot and launch the SpotCore:
 ```
