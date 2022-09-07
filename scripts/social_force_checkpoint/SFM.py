@@ -242,14 +242,23 @@ def social_force(spot, ped):
             # Elliptical model #
             ####################
             else:
-                a,b = a_b_from_velo(ped_velo)
+                    ped_velo_t = np.linalg.norm(ped_velo)
+                    y = -ped_velo*dt
+                    d = np.linalg.norm(diff)
+                    
+                    b = ( (d + np.linalg.norm(diff - y))**2 - (ped_velo_t*dt)**2 )**0.5 / 2
 
-                ell_dis, x, y = ellipse_center_dist(ped_spot_ang, a, b)
+                    initial = A2 * math.exp(-b/B2)
 
-                repulsive_force = A * math.exp((distance-ell_dis)*B + C)
+                    second  = (d + np.linalg.norm(diff - y))/(2*b)
 
-                force = np.array([[diffDirection[0,0]*repulsive_force],
-                                    [diffDirection[1,0]*repulsive_force]])
+                    third_1   = (diff-y)/np.linalg.norm(diff - y)
+
+                    third_2 = 0.5*(diffDirection + third_1)
+
+                    repulsive_force = initial * second * third_2
+
+                    force = repulsive_force
 
         forces = np.add(forces,force)
         # rospy.loginfo(forces)
@@ -284,19 +293,6 @@ def duration(spot_pose,ped, cc):
     global Poses, distances
     velocity = 1
     ped_dist = np.empty((0), float)
-
-    # for i in range(len(ped.objects)):
-    #     temp = np.linalg.norm(np.array([[ped.objects[i].position[0]],[ped.objects[i].position[1]]]))
-    #     temp_arr = np.array([temp])
-    #     ped_dist = np.append(ped_dist, temp_arr, axis=0)
-
-    # if len(ped.objects) != 0:
-    #     if distances[:,1].min() > 3 and distances[:,1].min() < 4:
-    #         velocity = 1.0
-    #     elif distances[:,1].min() < 3:
-    #         velocity = 0.7
-    #     else:
-    #         velocity = 1.6
     
     distance_to_checkpoint = np.linalg.norm(np.array([[Poses[cc].position.x - spot_pose[0,0]],
                                                       [Poses[cc].position.y - spot_pose[1,0]]]))
