@@ -1,64 +1,51 @@
-# PRL's Spot ROS Driver Docker File
+# Social Navigation For A Quadruped Mobile Robot
 
-This Dockerfile builds a docker image aimed at running on Spot Core for access to the robot through ROS.
+## Contents
+repository containing resources for Sebastian Aegidius' MSc thesis project!
 
-## Accessing Spot Core
+In this repository are the python scripts for the implementations of the Social Force Model (SFM) and novel Augmented Social Force Model (ASFM) on the Boston Dynamics Spot robot for mobile navigation.
 
-Turn on Spot and connect to its WiFi network. Then open a terminal and type:
+Sebastian Aegidius' MSc thesis report is also available in this repository.
 
-```console
-$ ssh -4 -p 20022 spot@192.168.80.3 -L 21000:127.0.0.1:21000 -fN
-$ vncviewer localhost:21000
+## Video Demonstration
+[Here](https://youtu.be/36d5Frar4pE) is a link to a video demonstration of the two models implemented on the robot system.
+
+
+## Mobile Robot
+The mobile robot system used in this project:
+
+<img src="https://user-images.githubusercontent.com/66956640/188476203-c055e23c-2813-4460-a432-e5dfed2b4cf9.png" alt="" data-canonical-src="[](https://user-images.githubusercontent.com/66956640/188476203-c055e23c-2813-4460-a432-e5dfed2b4cf9.png)" width="537" height="500" />
+
+
+## Syste integration
+<img src="https://user-images.githubusercontent.com/66956640/188483403-e3673c34-27d7-48ba-b504-c0e2d04e01e1.jpg" alt="" data-canonical-src="[](https://user-images.githubusercontent.com/66956640/188483403-e3673c34-27d7-48ba-b504-c0e2d04e01e1.jpg)" width="618" height="500" />
+
+
+## Running the code
+
+the script get_pose.py and spot_interface.py are python scripts to run on Boston Dynamics Spot.
+
+The SFM.py is the SFM implementation, and ASFM.py is the ASFM implementation. Both scripts require a zed2i stereo camera feed to post on the local ROS master url to work as they use both the Spot kinematic_state topic and certain topics form the Zed2i's human detection. Make sure to have the Pose_load.txt file in the ROS workspace on the SpotCore and in the ROS workspace on the Orin.
+
+VNC into Spot and launch the SpotCore:
 ```
-When promted, type the password for the VNC server (you can probably guess it). This will log you in Spot Core.
-
-## Building
-
-We will use the Makefile included with this repo for this:
-
-1. Go to the directory where the Makefile is stored
-2. Type 
-
-```console
-make .pull 
+make body_driver
 ```
-This will create a new directory under your `HOME` directory called `prl_spot/src`.
-
-3. Go to `prl_spot/src`:
-
-```console
-cd ~/prl_spot/src`
+In a second terminal run:
 ```
-
-4. Clone the PRL's Spot ROS driver repo:
-
-```console
-git clone https://github.com/ImperialCollegeLondon/spot_prl.git
+make pose
 ```
-5. Open `spot_prl/spot_driver/launch/spot_interface.launch` and update the `username` and `password` fields.
-
-6. Go back to the directory where the Makefile is
-7. Run:
-
-```console
-make .build
+In a third terminal ssh into the connected Jetson Orin and launch ZED2i camera:
 ```
+ssh Orin
+roslaunch zed_wrapper zed2i.launch
+```
+In a fourth terminal ssh into the Jetosn Orin and run the model script:
+```
+(SFM)
+rosrun zed_obj_det_sub_tutorial SFM.py
 
-## Usage
-
-* Go to the directory where the Makefile is stored.
-
-* Run:
-
-```console
- make body_driver
- ```
-
-Wait until the driver finished loading. You need to enable the motors from Spot first for this to work.
-
-* In a new terminal run 
-
-```console
-make keyboard
-``` 
-Follow the instractions on the screen to control Spot using the keyboars.
+(ASFM)
+rosrun zed_obj_det_sub_tutorial ASFM.py
+```
+the beginning and end point coordinates can be changed in the Pose_load.txt file
