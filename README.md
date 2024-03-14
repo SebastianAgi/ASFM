@@ -1,4 +1,4 @@
-# Social Navigation For A Quadruped Mobile Robot
+# Legged Robot Social Navigation via Augmented Social Forces
 
 ## Contents
 repository containing resources for Sebastian Aegidius' MSc thesis project!
