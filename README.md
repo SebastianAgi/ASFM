@@ -1,7 +1,9 @@
 # ASFM: Augmented Social Force Model for Legged Robot Social Navigation
 
 **Authors**: Sebastian Aegidius, Rodrigo Chacón-Quesada, Yiannis Demiris, Demitrios Kanoulas
+
 **Website**: https://rpl-cs-ucl.github.io/ASFM/
+
 **Paper**: coming soon
 
 ## Contents
