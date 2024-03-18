@@ -153,8 +153,6 @@ class Pose_record:
                 posex = self.Poses[7]
             elif key=='0':
                 posex = self.Poses[8]
-            elif key=='9':
-                posex = self.Poses
 
             self.duration_trajectory_srv_req.waypoints = posex
             self.duration_trajectory_srv_req.duration.data = flt
