@@ -228,7 +228,6 @@ def social_force(spot, ped):
                                  [ped.objects[i].velocity[1]]])
 
             ped_spot_ang = angle_between(unit_vector(ped_velo),unit_vector(np.array([[1],[0]])))
-            # rospy.loginfo(ped_spot_ang*180/np.pi)
 
             x_ind,y_ind = np.unravel_index(np.argmin(distances, axis = None),distances.shape)
 
