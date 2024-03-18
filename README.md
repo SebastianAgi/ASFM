@@ -1,11 +1,11 @@
-# Legged Robot Social Navigation via Augmented Social Forces
+# ASFM: Augmented Social Force Model for Legged Robot Social Navigation
+
+**Authors**: Sebastian Aegidius, Rodrigo Chacón-Quesada, Yiannis Demiris, Demitrios Kanoulas
+**Website**: https://rpl-cs-ucl.github.io/ASFM/
+**Paper**: coming soon
 
 ## Contents
-repository containing resources for Sebastian Aegidius' MSc thesis project!
-
 In this repository are the python scripts for the implementations of the Social Force Model (SFM) and novel Augmented Social Force Model (ASFM) on the Boston Dynamics Spot robot for mobile navigation.
-
-Sebastian Aegidius' MSc thesis report is also available in this repository.
 
 ## Video Demonstration
 [Here](https://youtu.be/36d5Frar4pE) is a link to a video demonstration of the two models implemented on the robot system.
