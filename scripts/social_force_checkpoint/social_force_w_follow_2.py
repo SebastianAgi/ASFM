@@ -145,8 +145,6 @@ def odom_to_baselink(spot, odom_dir):
             else:
                 rot_vel = -0.05
 
-    # srtang = '\nrot_vel: {}\nangle_to:\n{}\nang_between:\n{}'.format(rot_vel,angle_to,ang_between)
-    # rospy.loginfo(srtang)
 
     return bl_d_d, rot_vel, ang
 
