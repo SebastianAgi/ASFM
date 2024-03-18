@@ -9,7 +9,6 @@ import subprocess
 import time
 import numpy as np
 
-# Bosdyn specific imports
 import bosdyn.client
 import bosdyn.client.estop
 import bosdyn.client.lease
