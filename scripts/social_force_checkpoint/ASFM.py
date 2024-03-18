@@ -300,9 +300,6 @@ def social_force(spot, ped):
                 if np.linalg.norm(diff) < 1.5:
                     leader_too_close = True
 
-                # rospy.loginfo(2_2)
-                # rospy.loginfo('\nleader_velo: '+str(leader_velo))
-
             else:
 
                 #############################################
