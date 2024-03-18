@@ -6,11 +6,12 @@ default:
 	@$(MAKE) -s .pull
 	@$(MAKE) -s .build
 
+
 .pull:
 	mkdir -p ~/Documents/sebastian/prl_spot/src/
 
 .build:
-	docker build --tag=personalroboticsimperial/prl:prl-spot .
+	docker build --tag=personalroboticsimperial/prl:prl-spot . #vhange this to an image that you have access to
 	@docker run --detach --rm -v ~/Documents/sebastian/prl_spot:/catkin_ws:rw --name prl-spot personalroboticsimperial/prl:prl-spot bash -c "source /opt/ros/noetic/setup.bash; roscore"
 	@sleep 5
 	@docker exec -it prl-spot bash -c "source /opt/ros/noetic/setup.bash; cd /catkin_ws; rosdep install --from-paths src --ignore-src --rosdistro noetic -y; catkin_make --cmake-args -DBUILD_TYPE=Release"
