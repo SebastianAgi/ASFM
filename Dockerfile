@@ -34,7 +34,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends ros-noetic-ros-base \
     && apt-get autoclean \
     && apt-get autoremove \
-    # Clear apt-cache to reduce image size
+    
     && rm -rf /var/lib/apt/lists/*
 
 RUN echo "source /opt/ros/noetic/setup.bash" >> /root/.bashrc
