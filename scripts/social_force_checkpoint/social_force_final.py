@@ -273,8 +273,6 @@ def social_force(spot, ped):
                 if np.linalg.norm(diff) < 1.5:
                     leader_too_close = True
 
-            # rospy.loginfo(1_1)
-
         # If pedestrian is moving above threshold apply an elliptical force model
         else:
 
@@ -290,13 +288,11 @@ def social_force(spot, ped):
                     leader_too_close = True
 
             ped_spot_ang = angle_between(unit_vector(ped_velo),unit_vector(np.array([[1],[0]])))
-            # rospy.loginfo(ped_spot_ang*180/np.pi)
 
             x_ind,y_ind = np.unravel_index(np.argmin(distances, axis = None),distances.shape)
 
             if ped_spot_ang*180/np.pi < 30 and distances[x_ind,0] == ped.objects[i].label_id and distances[x_ind,1] < 4.0 and leader == None and people_nearby == True and distances[x_ind,4] != 1:
                 strong = '\nthere is a leader now, id:{}\nangle:{}'.format(ped.objects[i].label_id,ped_spot_ang*180/np.pi)
-                rospy.loginfo(strong)
                 
                 leader = ped.objects[i].label_id
                 follow_flag = True
@@ -305,9 +301,6 @@ def social_force(spot, ped):
                 force = np.array([[0],[0]])
                 if np.linalg.norm(diff) < 1.5:
                     leader_too_close = True
-
-                # rospy.loginfo(2_2)
-                # rospy.loginfo('\nleader_velo: '+str(leader_velo))
 
             else:
 
